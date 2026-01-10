@@ -9,7 +9,7 @@ use App\Services\FSM\TelegramFsmService;
 class TelegramWebhookController extends Controller
 {
     public function handle(Request $request, TelegramFsmService $fsm): \Illuminate\Http\JsonResponse
-    {
+    {   Log::debug('WEBHOOK HIT FROM TELEGRAM');
         Log::debug('STEP 1: webhook controller entered');
         $update = $request->all();
 
