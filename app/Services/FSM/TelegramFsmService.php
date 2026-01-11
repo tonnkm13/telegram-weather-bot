@@ -238,12 +238,18 @@ class TelegramFsmService
                 "🌬 Вітер: {$w['wind']} м/с\n" .
                 "📖 {$w['description']}",
             'reply_markup' => json_encode([
-                'keyboard' => [
-                    [['text' => '🔄 Почати заново']],
+                'inline_keyboard' => [
+                    [
+                        ['text' => '🌤 Завтра', 'callback_data' => 'weather_tomorrow'],
+                        ['text' => '📅 На 3 дні', 'callback_data' => 'weather_3days'],
+                    ],
+                    [
+                        ['text' => '🏙 Інше місто', 'callback_data' => 'change_city'],
+                    ],
                 ],
-                'resize_keyboard' => true,
             ]),
         ]);
+
     }
 
     private function avg(?float $a, ?float $b): ?float
@@ -254,17 +260,20 @@ class TelegramFsmService
 
         return round(($a + $b) / 2, 1);
     }
-    private function weatherKeyboard(): array
-    {
-        return [
-            'keyboard' => [
-                ['🌤 Завтра', '📆 На 3 дні'],
-                ['🏙 Інше місто'],
+private function weatherKeyboard(): array
+{
+    return [
+        'inline_keyboard' => [
+            [
+                ['text' => '🌤 Завтра', 'callback_data' => 'weather_tomorrow'],
+                ['text' => '📅 На 3 дні', 'callback_data' => 'weather_3days'],
             ],
-            'resize_keyboard' => true,
-            'one_time_keyboard' => false,
-        ];
-    }
+            [
+                ['text' => '🏙 Інше місто', 'callback_data' => 'change_city'],
+            ],
+        ],
+    ];
+}
 
     private function sendTomorrowWeather(TelegramUser $user, int $chatId): void
     {
