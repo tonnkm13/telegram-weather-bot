@@ -43,14 +43,14 @@ class TelegramFsmService
             $this->reset($user, $chatId);
             return;
         }
+        if ($text === 'Завтра') {
+            Log::debug('BUTTON TOMORROW PRESSED');
+            $this->sendTomorrowWeather($user, $chatId);
+            return;
+        }
         if ($text === '🏙 Інше місто') {
             $user->update(['state' => 'waiting_city']);
             $this->askCity($chatId);
-            return;
-        }
-
-        if ($text === '🌤 Завтра') {
-            $this->sendTomorrowWeather($user, $chatId);
             return;
         }
 
@@ -277,19 +277,30 @@ private function weatherKeyboard(): array
 
     private function sendTomorrowWeather(TelegramUser $user, int $chatId): void
     {
+        Log::debug('SEND TOMORROW WEATHER', [
+            'city' => $user->location,
+        ]);
+
         $weather = $this->weather->getTomorrow($user->location);
 
         if (!$weather) {
-            $this->sendError($chatId);
+            $this->telegram->sendMessage([
+                'chat_id' => $chatId,
+                'text' => '❌ Не вдалося отримати погоду на завтра',
+            ]);
             return;
         }
 
-        $this->sendWeatherMessage(
-            $chatId,
-            $user->location,
-            $weather,
-            '🌤 Погода на завтра'
-        );
+        $this->telegram->sendMessage([
+            'chat_id' => $chatId,
+            'text' =>
+                "🌤 Погода завтра у {$user->location}\n\n" .
+                "🌡 Температура: {$weather['temp']}°C\n" .
+                "🤍 Відчувається як: {$weather['feels']}°C\n" .
+                "💧 Вологість: {$weather['humidity']}%\n" .
+                "🌬 Вітер: {$weather['wind']} м/с\n" .
+                "📖 {$weather['description']}",
+        ]);
     }
     private function sendThreeDaysWeather(TelegramUser $user, int $chatId): void
     {
