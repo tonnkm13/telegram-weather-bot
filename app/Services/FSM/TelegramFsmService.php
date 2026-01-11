@@ -43,7 +43,21 @@ class TelegramFsmService
             $this->reset($user, $chatId);
             return;
         }
+        if ($text === '🏙 Інше місто') {
+            $user->update(['state' => 'waiting_city']);
+            $this->askCity($chatId);
+            return;
+        }
 
+        if ($text === '🌤 Завтра') {
+            $this->sendTomorrowWeather($user, $chatId);
+            return;
+        }
+
+        if ($text === '📆 На 3 дні') {
+            $this->sendThreeDaysWeather($user, $chatId);
+            return;
+        }
         switch ($user->state) {
             case 'start':
                 $this->askCity($user, $chatId);
@@ -239,5 +253,84 @@ class TelegramFsmService
         }
 
         return round(($a + $b) / 2, 1);
+    }
+    private function weatherKeyboard(): array
+    {
+        return [
+            'keyboard' => [
+                ['🌤 Завтра', '📆 На 3 дні'],
+                ['🏙 Інше місто'],
+            ],
+            'resize_keyboard' => true,
+            'one_time_keyboard' => false,
+        ];
+    }
+
+    private function sendTomorrowWeather(TelegramUser $user, int $chatId): void
+    {
+        $weather = $this->weather->getTomorrow($user->location);
+
+        if (!$weather) {
+            $this->sendError($chatId);
+            return;
+        }
+
+        $this->sendWeatherMessage(
+            $chatId,
+            $user->location,
+            $weather,
+            '🌤 Погода на завтра'
+        );
+    }
+    private function sendThreeDaysWeather(TelegramUser $user, int $chatId): void
+    {
+        $forecast = $this->weather->getThreeDays($user->location);
+
+        if (!$forecast) {
+            $this->sendError($chatId);
+            return;
+        }
+
+        $text = "📆 Погода на 3 дні у {$user->location}\n\n";
+
+        foreach ($forecast as $day) {
+            $text .=
+                "📅 {$day['date']}\n" .
+                "🌡 {$day['temp']}°C (відч. {$day['feels']}°C)\n" .
+                "🌬 {$day['wind']} м/с\n" .
+                "📖 {$day['desc']}\n\n";
+        }
+
+        $this->telegram->sendMessage([
+            'chat_id' => $chatId,
+            'text' => $text,
+            'reply_markup' => json_encode($this->weatherKeyboard()),
+        ]);
+    }
+    private function sendError(int $chatId, string $text = '❌ Сталася помилка'): void
+    {
+        $this->telegram->sendMessage([
+            'chat_id' => $chatId,
+            'text' => $text,
+        ]);
+    }
+    private function sendWeatherMessage(
+        int $chatId,
+        string $city,
+        array $weather,
+        string $title
+    ): void {
+        $message = "{$title}\n\n";
+        $message .= "🌤 Погода у {$city}\n";
+        $message .= "🌡 Температура: {$weather['temp']}°C\n";
+        $message .= "🤍 Відчувається як: {$weather['feels_like']}°C\n";
+        $message .= "💧 Вологість: {$weather['humidity']}%\n";
+        $message .= "🌬 Вітер: {$weather['wind']} м/с\n";
+        $message .= "📖 {$weather['description']}";
+
+        $this->telegram->sendMessage([
+            'chat_id' => $chatId,
+            'text' => $message,
+        ]);
     }
 }

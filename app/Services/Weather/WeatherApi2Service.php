@@ -38,4 +38,5 @@ class WeatherApi2Service implements WeatherProviderInterface
             'description' => mb_strtolower($data['current']['condition']['text']),
         ];
     }
+
 }
