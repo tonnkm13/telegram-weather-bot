@@ -75,7 +75,10 @@ class TelegramFsmService
             case 'waiting_time':
                 $this->saveTime($user, $chatId, $text);
                 break;
-
+            case '🌤 Зараз':
+                Log::debug('FSM BUTTON: NOW');
+                $this->sendWeather($user);
+                break;
             default:
                 $this->reset($user, $chatId);
                 break;
