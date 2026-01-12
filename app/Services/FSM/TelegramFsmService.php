@@ -238,16 +238,20 @@ class TelegramFsmService
                 "🌬 Вітер: {$w['wind']} м/с\n" .
                 "📖 {$w['description']}",
             'reply_markup' => json_encode([
-                'inline_keyboard' => [
+                'keyboard' => [
                     [
-                        ['text' => '🌤 Завтра', 'callback_data' => 'weather_tomorrow'],
-                        ['text' => '📅 На 3 дні', 'callback_data' => 'weather_3days'],
+                        ['text' => '🌤 Зараз'],
+                        ['text' => '📅 Завтра'],
                     ],
                     [
-                        ['text' => '🏙 Інше місто', 'callback_data' => 'change_city'],
+                        ['text' => '📆 На 3 дні'],
+                        ['text' => '🔄 Почати заново'],
                     ],
                 ],
+                'resize_keyboard' => true,
+                'one_time_keyboard' => false,
             ]),
+
         ]);
 
     }
