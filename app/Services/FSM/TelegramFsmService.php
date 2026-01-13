@@ -296,26 +296,19 @@ private function weatherKeyboard(): array
             'city' => $user->location,
         ]);
 
-        $weather = $this->weather->getTomorrow($user->location);
+        $data = $this->weather->getTomorrow($user->location);
 
-        if (!$weather) {
-            $this->telegram->sendMessage([
-                'chat_id' => $chatId,
-                'text' => '❌ Не вдалося отримати погоду на завтра',
-            ]);
+        if (!$data) {
+            $this->sendError($chatId);
             return;
         }
 
-        $this->telegram->sendMessage([
-            'chat_id' => $chatId,
-            'text' =>
-                "🌤 Погода завтра у {$user->location}\n\n" .
-                "🌡 Температура: {$weather['temp']}°C\n" .
-                "🤍 Відчувається як: {$weather['feels']}°C\n" .
-                "💧 Вологість: {$weather['humidity']}%\n" .
-                "🌬 Вітер: {$weather['wind']} м/с\n" .
-                "📖 {$weather['description']}",
-        ]);
+        $this->sendWeatherMessage(
+            $chatId,
+            $user->location,
+            $data,
+            '📅 Погода завтра'
+        );
     }
     private function sendThreeDaysWeather(TelegramUser $user, int $chatId): void
     {
