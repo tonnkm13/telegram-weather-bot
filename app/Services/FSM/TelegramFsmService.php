@@ -43,7 +43,7 @@ class TelegramFsmService
             $this->reset($user, $chatId);
             return;
         }
-        if ($text === 'Завтра') {
+        if ($text === '📅 Завтра') {
             Log::debug('BUTTON TOMORROW PRESSED');
             $this->sendTomorrowWeather($user, $chatId);
             return;
@@ -82,6 +82,10 @@ class TelegramFsmService
             case '📅 Завтра':
                 Log::debug('FSM BUTTON: TOMORROW');
                 $this->sendTomorrowWeather($user, $chatId, $text);
+                break;
+            case '📆 На 3 дні':
+                Log::debug('FSM BUTTON: TOMORROW');
+                $this->sendThreeDaysWeather($user, $chatId, $text);
                 break;
             default:
                 $this->reset($user, $chatId);
