@@ -77,7 +77,11 @@ class TelegramFsmService
                 break;
             case '🌤 Зараз':
                 Log::debug('FSM BUTTON: NOW');
-                $this->sendWeather($user);
+                $this->sendWeather($user, $chatId, $text);
+                break;
+            case '📅 Завтра':
+                Log::debug('FSM BUTTON: TOMORROW');
+                $this->sendTomorrowWeather($user, $chatId, $text);
                 break;
             default:
                 $this->reset($user, $chatId);
