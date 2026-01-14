@@ -55,6 +55,7 @@ class TelegramFsmService
         }
 
         if ($text === '📆 На 3 дні') {
+            Log::debug('BUTTON 3 DAYS PRESSED');
             $this->sendThreeDaysWeather($user, $chatId);
             return;
         }
@@ -312,28 +313,27 @@ private function weatherKeyboard(): array
     }
     private function sendThreeDaysWeather(TelegramUser $user, int $chatId): void
     {
-        $forecast = $this->weather->getThreeDays($user->location);
+        Log::debug('SEND 3 DAYS WEATHER', ['city' => $user->location]);
 
-        if (!$forecast) {
+        $items = $this->weather->getThreeDays($user->location);
+
+        if (!$items || count($items) === 0) {
             $this->sendError($chatId);
             return;
         }
 
         $text = "📆 Погода на 3 дні у {$user->location}\n\n";
 
-        foreach ($forecast as $day) {
+        foreach ($items as $item) {
             $text .=
-                "📅 {$day['date']}\n" .
-                "🌡 {$day['temp']}°C (відч. {$day['feels']}°C)\n" .
-                "🌬 {$day['wind']} м/с\n" .
-                "📖 {$day['desc']}\n\n";
+                "📅 {$item['date']}\n" .
+                "🌡 {$item['temp']}°C (відч. {$item['feels']}°C)\n" .
+                "💧 {$item['humidity']}%\n" .
+                "🌬 {$item['wind']} м/с\n" .
+                "📖 {$item['desc']}\n\n";
         }
 
-        $this->telegram->sendMessage([
-            'chat_id' => $chatId,
-            'text' => $text,
-            'reply_markup' => json_encode($this->weatherKeyboard()),
-        ]);
+        $this->sendWeatherMessage($chatId, $text);
     }
     private function sendError(int $chatId, string $text = '❌ Сталася помилка'): void
     {
