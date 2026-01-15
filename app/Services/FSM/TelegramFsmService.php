@@ -39,24 +39,31 @@ class TelegramFsmService
 
         Log::debug('USER BEFORE LOGIC', $user->toArray());
 
-        if ($text === '/start' || $text === '🔄 Почати заново') {
-            $this->reset($user, $chatId);
+
+        if ($text === '🌤 Зараз') {
+            Log::debug('FSM BUTTON: NOW');
+            $this->sendWeather($user, $chatId);
             return;
         }
+
         if ($text === '📅 Завтра') {
-            Log::debug('BUTTON TOMORROW PRESSED');
+            Log::debug('FSM BUTTON: TOMORROW');
             $this->sendTomorrowWeather($user, $chatId);
-            return;
-        }
-        if ($text === '🏙 Інше місто') {
-            $user->update(['state' => 'waiting_city']);
-            $this->askCity($chatId);
             return;
         }
 
         if ($text === '📆 На 3 дні') {
-            Log::debug('BUTTON 3 DAYS PRESSED');
+            Log::debug('FSM BUTTON: 3 DAYS');
             $this->sendThreeDaysWeather($user, $chatId);
+            return;
+        }
+
+        if ($text === '🏙 Інше місто') {
+            $this->reset($user, $chatId);
+            return;
+        }
+        if ($text === '/start' || $text === '🔄 Почати заново') {
+            $this->reset($user, $chatId);
             return;
         }
         switch ($user->state) {
@@ -75,18 +82,6 @@ class TelegramFsmService
 
             case 'waiting_time':
                 $this->saveTime($user, $chatId, $text);
-                break;
-            case '🌤 Зараз':
-                Log::debug('FSM BUTTON: NOW');
-                $this->sendWeather($user, $chatId, $text);
-                break;
-            case '📅 Завтра':
-                Log::debug('FSM BUTTON: TOMORROW');
-                $this->sendTomorrowWeather($user, $chatId, $text);
-                break;
-            case '📆 На 3 дні':
-                Log::debug('FSM BUTTON: TOMORROW');
-                $this->sendThreeDaysWeather($user, $chatId, $text);
                 break;
             default:
                 $this->reset($user, $chatId);
