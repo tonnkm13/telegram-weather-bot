@@ -8,13 +8,13 @@ use Illuminate\Support\Facades\Route;
  //   Log::debug('INSIDE ROUTE CLOSURE');
  //   return response()->json(['ok' => true]);});
 
-Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle']);
+//Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle']);
 //Route::get('/ping', function () {
 //   return 'pong';});
 
 
 //Route::get('/ping', function () {    return 'pong';});
 
-//Route::post('/telegram/webhook', function () {
- //   \Log::debug('WEBHOOK ROUTE HIT');
- //   return response()->json(['ok' => true]);});
+Route::post('/telegram/webhook', function () {
+    Log::debug('WEBHOOK ROUTE HIT');
+    return response()->json(['ok' => true]);});
