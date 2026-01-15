@@ -10,45 +10,29 @@ use Telegram\Bot\Api;
 class TelegramWebhookController extends Controller
 {
     private Api $telegram;
-    public function handle(Request $request, TelegramFsmService $fsm): \Illuminate\Http\JsonResponse
-    {    Log::debug('CONTROLLER HANDLE ENTERED');
+    public function handle(Request $request)
+    {
+        Log::debug('CONTROLLER HANDLE ENTERED');
+
+        $update = $request->all();
+
+        Log::debug('UPDATE PAYLOAD', $update);
+
+        $chatId = $update['message']['chat']['id'] ?? null;
+
+        if (!$chatId) {
+            Log::error('CHAT ID NOT FOUND');
+            return response()->json(['ok' => true]);
+        }
 
         $this->telegram->sendMessage([
-            'chat_id' => $update['message']['chat']['id'] ?? null,
+            'chat_id' => $chatId,
             'text' => '🟢 Webhook живий',
         ]);
 
         return response()->json(['ok' => true]);
-        $update = $request->all();
-        if (isset($update['callback_query'])) {
-            Log::debug('CALLBACK QUERY RECEIVED', $update['callback_query']);
-
-            $callback = $update['callback_query'];
-            $chatId = $callback['message']['chat']['id'];
-            $data = $callback['data'];
-
-            $this->telegram->sendMessage([
-                'chat_id' => $chatId,
-                'text' => "Натиснута кнопка: {$data}",
-            ]);
-
-            return response()->json(['ok' => true]);
-        }
-        if (!isset($update['message']['text'])) {
-            return response()->json(['ok' => true]);
-        }
-
-        $telegramId = $update['message']['from']['id'];
-        $chatId     = $update['message']['chat']['id'];
-        $text       = trim($update['message']['text']);
-
-        Log::debug('TEXT RECEIVED', ['text' => $text]);
-
-        // 🔥 ВСЯ логіка ТУТ ЗАКІНЧУЄТЬСЯ
-        $fsm->handle($telegramId, $chatId, $text);
-
-        return response()->json(['ok' => true]);
     }
+
     public function __construct()
     {
         $this->telegram = new Api(config('services.telegram.bot_token'));
