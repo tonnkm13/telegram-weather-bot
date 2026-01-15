@@ -34,43 +34,6 @@ class OpenWeatherService implements WeatherProviderInterface
             'description' => $data['weather'][0]['description'] ?? '—',
         ];
     }
-    public function getTomorrow(string $city): ?array
-    {
-        $forecast = $this->getNormalizedWeather($city);
-
-        if (!$forecast || empty($forecast['list'])) {
-            return null;
-        }
-
-        // беремо прогноз приблизно через 24 години
-        foreach ($forecast['list'] as $item) {
-            if (str_contains($item['dt_txt'], '12:00:00')) {
-                return $this->mapForecastItem($item);
-            }
-        }
-
-        return null;
-    }
-    public function getThreeDays(string $city): ?array
-    {
-        $forecast = $this->getNormalizedWeather($city);
-
-        if (!$forecast || empty($forecast['list'])) {
-            return null;
-        }
-
-        $days = [];
-
-        foreach ($forecast['list'] as $item) {
-            $date = substr($item['dt_txt'], 0, 10);
-
-            if (!isset($days[$date]) && count($days) < 3) {
-                $days[$date] = $this->mapForecastItem($item);
-            }
-        }
-
-        return array_values($days);
-    }
 
     private function mapForecastItem(array $item): array
     {
