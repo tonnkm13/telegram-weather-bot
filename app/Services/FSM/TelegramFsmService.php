@@ -198,8 +198,6 @@ class TelegramFsmService
             'state' => 'done',
         ]);
 
-        // ⬇️ ВАЖЛИВО: викликаємо одразу
-        $this->sendWeather($user);
     }
     private function sendWeather(TelegramUser $user): void
     {
