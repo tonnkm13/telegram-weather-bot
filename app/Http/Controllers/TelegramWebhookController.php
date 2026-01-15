@@ -11,7 +11,14 @@ class TelegramWebhookController extends Controller
 {
     private Api $telegram;
     public function handle(Request $request, TelegramFsmService $fsm): \Illuminate\Http\JsonResponse
-    {
+    {    Log::debug('CONTROLLER HANDLE ENTERED');
+
+        $this->telegram->sendMessage([
+            'chat_id' => $update['message']['chat']['id'] ?? null,
+            'text' => '🟢 Webhook живий',
+        ]);
+
+        return response()->json(['ok' => true]);
         $update = $request->all();
         if (isset($update['callback_query'])) {
             Log::debug('CALLBACK QUERY RECEIVED', $update['callback_query']);
