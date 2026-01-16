@@ -24,18 +24,15 @@ class TelegramFsmService
         $this->weatherApi2 = $weatherApi2;
     }
 
-
-
     public function handle(int $telegramId, int $chatId, string $text): void
     { Log::debug('FSM HANDLE ENTER', [
         'telegram_id' => $telegramId,
         'chat_id' => $chatId,
         'text' => $text,
     ]);
-        $user = TelegramUser::firstOrCreate(
+       $user = TelegramUser::firstOrCreate(
             ['telegram_id' => $telegramId],
-            ['state' => 'start']
-        );
+            ['state' => 'start']        );
 
         Log::debug('USER BEFORE LOGIC', $user->toArray());
 
@@ -307,26 +304,45 @@ private function weatherKeyboard(): array
     {
         Log::debug('SEND 3 DAYS WEATHER', ['city' => $user->location]);
 
-        $items = $this->weather->getThreeDays($user->location);
-
-        if (!$items || count($items) === 0) {
-            $this->sendError($chatId);
+        if (!$user->location) {
+            $this->telegram->sendMessage([
+                'chat_id' => $chatId,
+                'text' => '❌ Місто не задано',
+                'reply_markup' => $this->mainKeyboard(),
+            ]);
             return;
         }
 
-        $text = "📆 Погода на 3 дні у {$user->location}\n\n";
+        $forecast = $this->weather->getThreeDays($user->location);
 
-        foreach ($items as $item) {
-            $text .=
-                "📅 {$item['date']}\n" .
-                "🌡 {$item['temp']}°C (відч. {$item['feels']}°C)\n" .
-                "💧 {$item['humidity']}%\n" .
-                "🌬 {$item['wind']} м/с\n" .
-                "📖 {$item['desc']}\n\n";
+        if (!$forecast || empty($forecast)) {
+            $this->telegram->sendMessage([
+                'chat_id' => $chatId,
+                'text' => '❌ Не вдалося отримати прогноз на 3 дні',
+                'reply_markup' => $this->mainKeyboard(),
+            ]);
+            return;
         }
 
-        $this->sendWeatherMessage($chatId, $text);
+        $text = "📆 Погода на 3 дні у {$user->location}:\n\n";
+
+        foreach ($forecast as $day) {
+            $text .=
+                "📅 {$day['date']}\n" .
+                "🌡 {$day['temp']}°C (відчувається {$day['feels']}°C)\n" .
+                "💧 {$day['humidity']}%\n" .
+                "🌬 {$day['wind']} м/с\n" .
+                "📖 {$day['desc']}\n\n";
+        }
+
+        $this->telegram->sendMessage([
+            'chat_id' => $chatId,
+            'text' => $text,
+            'reply_markup' => $this->mainKeyboard(),
+        ]);
     }
+
+
     private function sendError(int $chatId, string $text = '❌ Сталася помилка'): void
     {
         $this->telegram->sendMessage([
@@ -353,4 +369,23 @@ private function weatherKeyboard(): array
             'text' => $message,
         ]);
     }
+    private function mainKeyboard(): string
+    {
+        return json_encode([
+            'keyboard' => [
+                [
+                    ['text' => '🌤 Зараз'],
+                    ['text' => '📅 Завтра'],
+                    ['text' => '📆 На 3 дні'],
+                ],
+                [
+                    ['text' => '🏙 Інше місто'],
+                    ['text' => '🔄 Почати заново'],
+                ],
+            ],
+            'resize_keyboard' => true,
+            'one_time_keyboard' => false,
+        ]);
+    }
+
 }
