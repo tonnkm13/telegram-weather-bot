@@ -18,21 +18,25 @@ class TelegramWebhookController extends Controller
 
         Log::debug('UPDATE PAYLOAD', $update);
 
-        $chatId = $update['message']['chat']['id'] ?? null;
+        $message = $update['message'] ?? null;
+
+        if (!$message) {
+            Log::debug('NO MESSAGE IN UPDATE');
+            return response()->json(['ok' => true]);
+        }
+
+        $chatId = $message['chat']['id'] ?? null;
+        $text   = $message['text'] ?? '';
 
         if (!$chatId) {
             Log::error('CHAT ID NOT FOUND');
             return response()->json(['ok' => true]);
         }
 
-        $this->telegram->sendMessage([
-            'chat_id' => $chatId,
-            'text' => '🟢 Webhook живий',
-        ]);
+        $this->fsm->handle($chatId, $text);
 
         return response()->json(['ok' => true]);
     }
-
     public function __construct()
     {
         $this->telegram = new Api(config('services.telegram.bot_token'));
