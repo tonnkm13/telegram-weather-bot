@@ -122,7 +122,7 @@ class TelegramFsmService
     }
 
     private function sendTomorrow(TelegramUser $user, int $chatId): void
-    {
+    { Log::debug('TOMORROW RAW', $this->weather->getForecast($user->location));
         if (!$user->location) {
             $this->askCity($chatId);
             return;
